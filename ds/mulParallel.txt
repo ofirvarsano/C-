@@ -1,0 +1,130 @@
+44 - sub01
+45 - sub10
+NEW OPCODE: 1021 tmr #<ms>
+NEW OPCODE: 1019 usermode
+TimeInterrupts: int2
+
+	# receive numbers from user to 500, 501, 502, 503 :
+	wait
+	load r0, #1023
+	store #500, r0
+	
+	wait
+	load r0, #1023
+	store #501, r0
+	
+	wait
+	load r0, #1023
+	store #502, r0
+	
+	wait
+	load r0, #1023
+	store #503, r0
+	
+    # set initial pid to 0
+    reset0
+    store #900, r0
+    
+    # setup int2 (timer) interrupt handler
+	set r0, ctxswitch
+	store #1017, r0	   # interupt vector starts at #1015
+	
+    # setup int3 (vmem) interrupt handler
+	set r0, vmemhandler
+	store #1018, r0	   # interupt vector starts at #1015
+	
+	# setup alternative cpu state pc to mul again
+	set r0, mul
+	store #909, r0
+    tmr #100
+
+    usermode        # this is what turns on virtual memory tranlsations via int3
+	jmp mul
+
+vmemhandler:
+	load r0, #900    # load pid
+    jz vmemhandler_end
+    
+    load r1, #905    # load address to translate
+    set r0, #1021
+    sub10
+    jnz vmemhandler_n1
+	set r1, #1022
+    store #905, r1
+    jmp vmemhandler_end
+    
+vmemhandler_n1:
+	load r1, #905    # load address to translate
+    set r0, #500
+    sub10
+    jnz vmemhandler_n2
+	set r1, #502
+    store #905, r1
+    jmp vmemhandler_end
+
+vmemhandler_n2:
+	load r1, #905    # load address to translate
+    set r0, #501
+    sub10
+    jnz vmemhandler_600
+	set r1, #503
+    store #905, r1
+	jmp vmemhandler_end
+	
+vmemhandler_600:
+	load r1, #905    # load address to translate
+    set r0, #600
+    sub10
+    jnz vmemhandler_end
+	set r1, #601
+    store #905, r1
+           
+vmemhandler_end:
+    restore
+
+ctxswitch:
+	# load r0, #1009
+	# load r1, #909
+	# store #1009, r1
+	# store #909, r0
+
+	load r0, #1010
+	load r1, #910
+	store #1010, r1
+	store #910, r0
+
+	load r0, #1011
+	load r1, #911
+	store #1011, r1
+	store #911, r0
+
+	load r0, #1012
+	load r1, #912
+	store #1012, r1
+	store #912, r0
+
+    # updates the pid from 0 to 1 or from 1 to 0
+    set r1, #1
+    load r0, #900
+    sub10   # if reg0 == 0 -> 1, reg0 == 1 -> 0
+    store #900, r0
+
+    tmr #100
+
+	restore
+
+mul:
+	load r1, #501
+	reset0
+	
+mulloop:
+	store #600, r1
+	load r1, #500
+	add01
+	load r1, #600
+	dec1
+	jnz mulloop
+	store #1021, r0
+	halt
+
+

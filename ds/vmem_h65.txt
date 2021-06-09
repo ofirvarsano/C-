@@ -1,0 +1,84 @@
+44 - sub01
+45 - sub10
+NEW OPCODE: 1021 tmr #<ms>
+NEW OPCODE: 1019 usermode
+TimeInterrupts: int2
+
+    # set initial pid to 0
+    reset0
+    store #900, r0
+    # setup int2 (timer) interrupt handler
+	set r0, ctxswitch
+	store #1017, r0	   # interupt vector starts at #1015
+    # setup int3 (vmem) interrupt handler
+	set r0, vmemhandler
+	store #1018, r0	   # interupt vector starts at #1015
+
+    # setup alternative cpu state pc to prgdec
+	set r0, prgdec
+	store #909, r0
+
+    tmr #100
+
+    usermode        # this is what turns on virtual memory tranlsations via int3
+	jmp prginc
+
+vmemhandler:
+    load r1, #905    # load address to translate
+    set r0, #1021
+    sub10
+    jnz vmemhandler_end
+
+    load r0, #900    # load pid
+    jz vmemhandler_end
+
+    set r1, #1022
+    store #905, r1
+
+vmemhandler_end:
+    restore
+
+ctxswitch:
+	load r0, #1009
+	load r1, #909
+	store #1009, r1
+	store #909, r0
+
+	load r0, #1010
+	load r1, #910
+	store #1010, r1
+	store #910, r0
+
+	load r0, #1011
+	load r1, #911
+	store #1011, r1
+	store #911, r0
+
+	load r0, #1012
+	load r1, #912
+	store #1012, r1
+	store #912, r0
+
+    # updates the pid from 0 to 1 or from 1 to 0
+    set r1, #1
+    load r0, #900
+    sub10   # if reg0 == 0 -> 1, reg0 == 1 -> 0
+    store #900, r0
+
+    tmr #100
+
+	restore
+
+prginc:
+	set0 #0
+loopinc:
+	store #1021, r0
+	inc0
+	jmp loopinc
+
+prgdec:
+	set0 #1023
+loopdec:
+	store #1021, r0   # in reality will perform store #1022, r0
+	dec0
+	jmp loopdec
