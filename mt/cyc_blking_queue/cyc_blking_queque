@@ -1,0 +1,33 @@
+#ifndef MT_CYCLIC_QUEUE_HPP
+#define MT_CYCLIC_QUEQUE_HPP
+
+#include "semaphore.hpp"
+#include "mutex.hpp"
+
+namespace experis {
+
+template <class T>
+class MTCyclicBuffer {
+public:
+    MTCyclicBuffer(size_t _size);
+    ~MTCyclicBuffer();
+
+    void Enqueue(const T& _val);
+    void Dequeue(T& _res);
+
+private:
+    MTCyclicBuffer(const MTCyclicBuffer&);
+    MTCyclicBuffer& operator=(const MTCyclicBuffer&);
+
+    T* m_buffer;
+    Semaphore m_freeSpace;
+    Semaphore m_occupiedSpace;
+    Mutex m_bufferLock;
+    size_t m_size;
+    size_t m_front;
+    size_t m_back;
+};
+
+} //experis
+
+#endif //MT_CYCLIC_BUFFER_HPP
