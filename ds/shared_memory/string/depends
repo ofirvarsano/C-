@@ -1,0 +1,2 @@
+pWrite.o: pWrite.cpp shmem.hpp
+shmem.o: shmem.cpp shmem.hpp

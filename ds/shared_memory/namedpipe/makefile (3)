@@ -1,0 +1,32 @@
+CC=g++
+TARGET= $(shell basename $(CURDIR))_test.out
+##TARGET= p.o
+CFLAGS=-cpp -ansi -pedantic -Wall -Wconversion -g
+OBJS= mainPong.o communicationNamedPipe.o
+
+$(TARGET): $(OBJS)
+	$(CC) -o $(TARGET) $(OBJS) 
+
+	
+run: $(TARGET)
+	./$(TARGET)
+	
+
+gdb: $(TARGET)
+	gdb ./$(TARGET) -q
+	
+valgrind: $(TARGET)
+	valgrind --leak-check=full ./$(TARGET)
+
+clean:
+	rm -f $(TARGET) $(OBJS)
+
+mainPong.o: mainPong.cpp 
+	$(CC) $(CFLAGS) -c mainPong.cpp 
+
+communicationNamedPipe.o: communicationNamedPipe.cpp 
+	$(CC) $(CFLAGS) -c communicationNamedPipe.cpp
+
+
+
+
